@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Sistema Prime - V22 Atualizado</title>
+    <style>
+        :root {
+            --ouro: #D4AF37; 
+            --fundo: #09090b; 
+            --card-bg: #18181b; 
+            --texto: #f4f4f5;
+            --texto-secundario: #a1a1aa;
+            --borda-sutil: rgba(255,255,255,0.08);
+            --sucesso: #10b981;
+            --container-width: 1000px;
+        }
+        
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif; 
+            margin: 0; 
+            background-color: var(--fundo);
+            background-image: radial-gradient(circle at top, #1c1c20 0%, #09090b 100%);
+            color: var(--texto); 
+            -webkit-font-smoothing: antialiased; 
+            padding-bottom: 80px; 
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: var(--container-width);
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        /* --- NAVEGAÇÃO --- */
+        .tabs { 
+            display: flex; 
+            justify-content: center;
+            background: rgba(24, 24, 27, 0.8); 
+            backdrop-filter: blur(12px);
+            padding: 6px; 
+            border-radius: 100px; 
+            border: 1px solid var(--borda-sutil); 
+            position: sticky; 
+            top: 20px; 
+            z-index: 1000; 
+            gap: 5px; 
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+            max-width: 400px; 
+            margin: 0 auto 40px auto;
+        }
+        
+        .tab-btn { 
+            flex: 1; 
+            padding: 10px 20px; 
+            border: none; 
+            background: transparent; 
+            color: var(--texto-secundario); 
+            font-weight: 600; 
+            border-radius: 100px; 
+            cursor: pointer; 
+            font-size: 13px; 
+            letter-spacing: 0.5px; 
+            transition: all 0.3s ease; 
+        }
+        
+        .tab-btn:hover { color: #fff; }
+        .tab-btn.active { background: var(--ouro); color: #000; box-shadow: 0 2px 10px rgba(212, 175, 55, 0.3); }
+
+        .view { display: none; animation: fadeIn 0.4s ease; }
+        .view.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* --- CATÁLOGO --- */
+        .search-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 40px;
+        }
+
+        #busca { 
+            width: 100%; 
+            max-width: 500px; 
+            padding: 16px 20px; 
+            border-radius: 12px; 
+            background: var(--card-bg); 
+            border: 1px solid var(--borda-sutil); 
+            color: white; 
+            font-size: 15px; 
+            outline: none; 
+            transition: all 0.3s;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+        #busca:focus { border-color: var(--ouro); box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1); }
+
+        .lista-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); 
+            column-gap: 20px; 
+            row-gap: 40px;
+        }
+
+        .card { 
+            background: var(--card-bg); 
+            border: 1px solid var(--borda-sutil); 
+            border-radius: 16px; 
+            padding: 20px; 
+            text-align: center; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: space-between; 
+            height: 100%; 
+            transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+        }
+        
+        .card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.6);
+            border-color: rgba(255,255,255,0.2);
+        }
+        
+        .modelo-header {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .modelo-id { 
+            color: var(--ouro); 
+            font-weight: 800; 
+            font-size: 1.4em; 
+            letter-spacing: -0.5px;
+        }
+
+        .pedra-badge {
+            background: rgba(212, 175, 55, 0.15);
+            color: var(--ouro);
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 700;
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 3px;
+        }
+
+        .modelo-desc { 
+            font-size: 12px; 
+            color: var(--texto-secundario); 
+            font-weight: 500;
+            text-transform: uppercase; 
+            margin-bottom: 20px; 
+            line-height: 1.4;
+            min-height: 34px;
+        }
+        
+        .btn-group {
+            display: flex;
+            flex-direction: column; 
+            gap: 8px;
+        }
+        @media (min-width: 768px) {
+            .btn-group { flex-direction: row; }
+        }
+
+        .btn { 
+            border: none; 
+            padding: 10px; 
+            border-radius: 8px; 
+            font-weight: 600; 
+            cursor: pointer; 
+            width: 100%; 
+            font-size: 11px; 
+            text-transform: uppercase; 
+            transition: 0.2s; 
+        }
+        .btn:hover { filter: brightness(1.1); }
+        .btn:active { transform: scale(0.96); }
+        
+        .btn-add { background: var(--ouro); color: #000; }
+        .btn-stone { background: rgba(255,255,255,0.05); color: #FFF; border: 1px solid var(--borda-sutil); }
+        .btn-stone:hover { background: rgba(255,255,255,0.1); }
+
+        /* --- ORÇAMENTO --- */
+        .id-group { 
+            background: var(--card-bg); 
+            padding: 30px; 
+            border-radius: 20px; 
+            margin-bottom: 30px; 
+            border: 1px solid var(--borda-sutil);
+            display: grid; 
+            gap: 20px;
+        }
+        @media (min-width: 768px) { .id-group { grid-template-columns: 1fr 1fr; } }
+
+        .id-group label { display: block; font-size: 11px; color: var(--ouro); font-weight: 700; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
+        .id-group input { 
+            width: 100%; 
+            padding: 14px; 
+            border-radius: 8px; 
+            border: 1px solid var(--borda-sutil); 
+            background: rgba(0,0,0,0.3); 
+            color: #fff; 
+            box-sizing: border-box; 
+            font-size: 16px; 
+            transition: 0.3s;
+        } 
+        .id-group input:focus { border-color: var(--ouro); background: rgba(0,0,0,0.5); outline: none; }
+        
+        .orcamento-item { 
+            background: var(--card-bg); 
+            border-radius: 12px; 
+            padding: 20px; 
+            margin-bottom: 15px; 
+            border: 1px solid var(--borda-sutil); 
+            position: relative; 
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .orcamento-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--borda-sutil);
+        }
+
+        .item-info { font-size: 16px; color: #fff; font-weight: 700; }
+        .item-subtotal { font-size: 16px; color: var(--ouro); font-weight: 700; }
+        
+        .tamanho-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(45px, 1fr)); gap: 6px; }
+        .tamanho-box { background: rgba(0,0,0,0.3); padding: 5px 0; border-radius: 6px; text-align: center; border: 1px solid var(--borda-sutil); }
+        .tamanho-box span { display: block; font-size: 9px; color: var(--texto-secundario); margin-bottom: 2px; }
+        .tamanho-box input { width: 100%; background: none; border: none; color: #fff; text-align: center; font-size: 16px; font-weight: 700; padding: 0; outline: none; }
+        .tamanho-box:focus-within { border-color: var(--ouro); }
+        
+        .total-wrapper {
+            background: var(--ouro);
+            color: #000;
+            padding: 25px;
+            border-radius: 16px;
+            text-align: center;
+            margin-top: 40px;
+            box-shadow: 0 10px 40px rgba(212, 175, 55, 0.15);
+        }
+        .total-floating { font-weight: 900; font-size: 2em; margin: 0; }
+        .footer-data { text-align: center; margin-top: 10px; color: #444; font-size: 11px; font-weight: 600; }
+
+        /* --- PDF / IMPRESSÃO --- */
+        @media print {
+            @page { size: A4; margin: 1cm; }
+            body { background: white !important; color: black !important; padding: 0 !important; margin: 0 !important; overflow: visible !important; }
+            .container { max-width: 100% !important; margin: 0 !important; padding: 0 !important; }
+            .tabs, .btn, #busca, .remover-btn, #btn-finalizar, input { display: none !important; }
+            .view { display: block !important; padding: 0 !important; }
+            #catalogo { display: none !important; }
+            #orcamento { display: block !important; width: 100% !important; margin: 0 auto !important; }
+            
+            .print-mirror { display: block !important; font-size: 20px; font-weight: bold; color: black; border-bottom: 2px solid black; margin-bottom: 5px; padding-bottom: 2px; text-transform: uppercase; }
+            .id-group { display: block !important; background: white !important; border: none !important; padding: 0 !important; margin-bottom: 20px !important; }
+            .input-wrapper { margin-bottom: 15px; }
+            .id-group label { color: black !important; font-size: 11px !important; margin-bottom: 2px !important; }
+            
+            .orcamento-item { background: white !important; border: 1px solid #000 !important; border-radius: 0 !important; border-left: 10px solid #000 !important; page-break-inside: avoid; margin-bottom: 15px !important; padding: 10px !important; }
+            .orcamento-header { border-bottom: 1px solid #000 !important; }
+            .item-info { color: black !important; font-size: 14px !important; }
+            .item-subtotal { color: black !important; font-size: 16px !important; }
+            
+            .tamanho-grid { display: grid !important; grid-template-columns: repeat(12, 1fr) !important; gap: 0 !important; border: 1px solid #000 !important; margin-top: 10px !important; }
+            .tamanho-box { border: 1px solid #999 !important; background: white !important; border-radius: 0 !important; padding: 2px !important; }
+            .tamanho-box span { color: black !important; font-size: 8px !important; }
+            .tamanho-box input { display: block !important; color: black !important; font-size: 12px !important; font-weight: bold !important; }
+            
+            .total-wrapper { background: #eee !important; border: 3px double #000 !important; color: black !important; padding: 15px !important; border-radius: 0 !important; box-shadow: none !important; }
+            .total-floating { font-size: 1.6em !important; }
+        }
+        .print-mirror { display: none; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('catalogo', this)">Catálogo</button>
+            <button class="tab-btn" onclick="switchTab('orcamento', this)">Pedido (<span id="cart-counter">0</span>)</button>
+        </div>
+
+        <div id="catalogo" class="view active">
+            <div class="search-container">
+                <input type="text" id="busca" placeholder="🔎 Pesquisar modelo (ex: P-02)..." oninput="filtrar()">
+            </div>
+            <div id="lista" class="lista-grid"></div>
+        </div>
+
+        <div id="orcamento" class="view">
+            <div class="id-group">
+                <div class="input-wrapper">
+                    <label>Nome do Vendedor</label>
+                    <input type="text" id="vendedor" placeholder="Digite seu nome..." oninput="syncText('vendedor', 'p-vendedor')">
+                    <div id="p-vendedor" class="print-mirror"></div>
+                </div>
+
+                <div class="input-wrapper">
+                    <label>Cliente / Loja</label>
+                    <input type="text" id="cliente" placeholder="Nome do cliente..." oninput="syncText('cliente', 'p-cliente')">
+                    <div id="p-cliente" class="print-mirror"></div>
+                </div>
+            </div>
+
+            <div id="itens-checkout"></div>
+            
+            <div class="total-wrapper">
+                <div class="total-floating">Total: R$ <span id="total-geral">0,00</span></div>
+                <div class="footer-data">Data: <span id="data-atual"></span></div>
+            </div>
+
+            <button id="btn-finalizar" class="btn" style="background:var(--sucesso); color:#fff; padding:20px; font-size:16px; text-transform:uppercase; letter-spacing:1px; margin-top:30px; border-radius:12px;" onclick="enviarPedido()">
+                Concluir Pedido
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // DADOS 100% SINCRONIZADOS COM O JSON
+        const produtos = [
+          {"m": "D-01", "d": "D-01 - SEMIANATOMICO 3MM CHANFRADA DIAMANTEIRA", "p": 49.9, "cp": 49.9, "pedras": 0, "q_pedra": 0},
+          {"m": "D-02", "d": "D-02 - SEMIANATOMICO 3MM LISA /1FRIZO DIAMANTADEIRA", "p": 49.9, "cp": 49.9, "pedras": 0, "q_pedra": 0},
+          {"m": "D-03", "d": "D-03 - SEMIANATOMICO 3MM RETA DIAMANTADEIRA", "p": 49.9, "cp": 49.9, "pedras": 0, "q_pedra": 0},
+          {"m": "D-05", "d": "D-05 - SEMIANATOMICO 4MM DIAMANTADA/ INFINITO", "p": 59.9, "cp": 59.9, "pedras": 0, "q_pedra": 0},
+          {"m": "D-06", "d": "D-06 - SEMIANATOMICO 4MM DIAMANTADA/RETA/DOIS FRIZOS", "p": 59.9, "cp": 59.9, "pedras": 0, "q_pedra": 0},
+          {"m": "D-08", "d": "D-08 - SEMIANATOMICO 4MM RETA/DIAMANTADA/FLECHA", "p": 59.9, "cp": 59.9, "pedras": 0, "q_pedra": 0},
+          {"m": "D-09", "d": "D-09 - SEMIANATOMICO 4MM RETA/1CHANFRO LATERAL/DIAMANTADA/FRIZO LATERAL", "p": 59.9, "cp": 59.9, "pedras": 0, "q_pedra": 0},
+          {"m": "P-01", "d": "P-01 - SEMIANATOMICO 2MM LISO (POLIDO)", "p": 39.9, "cp": 39.9, "pedras": 0, "q_pedra": 0},
+          {"m": "P-02", "d": "P-02 - SEMIANATOMICO 4MM LISO (POLIDO)", "p": 59.9, "cp": 77.4, "pedras": 1, "q_pedra": 7},
+          {"m": "P-03", "d": "P-03 - SEMIANATOMICO 4MM POLIDA FRIZO TORTO", "p": 59.9, "cp": 62.4, "pedras": 1, "q_pedra": 1},
+          {"m": "P-04", "d": "P-04 - SEMIANATOMICO 4MM MEIA CANA POLIDA", "p": 59.9, "cp": 62.4, "pedras": 1, "q_pedra": 1},
+          {"m": "P-05", "d": "P-05 - SEMIANATOMICO 4MM LISO (POLIDO)", "p": 59.9, "cp": 97.4, "pedras": 1, "q_pedra": 15},
+          {"m": "P-06", "d": "P-06 - SEMIANATOMICO 4MM RETA 2FRIZOS ACETINADA", "p": 59.9, "cp": 72.4, "pedras": 1, "q_pedra": 5},
+          {"m": "P-07", "d": "P-07 - SEMIANATOMICO 3MM JATEADO", "p": 49.9, "cp": 49.9, "pedras": 0, "q_pedra": 0},
+          {"m": "P-08", "d": "P-08 - SEMIANATOMICO 3MM CHANFRADO / JATEADO", "p": 49.9, "cp": 49.9, "pedras": 0, "q_pedra": 0},
+          {"m": "P-09", "d": "P-09 - SEMIANATOMICO 4MM ABAULADA/JATEADO", "p": 59.9, "cp": 59.9, "pedras": 0, "q_pedra": 0},
+          {"m": "P-10", "d": "P-10 - SEMIANATOMICO 5MM RETA/CHANFRADA/JATEADA INFINITO", "p": 69.9, "cp": 69.9, "pedras": 0, "q_pedra": 0},
+          {"m": "P-11", "d": "P-11 - SEMIANATOMICO 4MM RETA/JATEADA/2FRIZOS", "p": 59.9, "cp": 59.9, "pedras": 0, "q_pedra": 0},
+          {"m": "P-12", "d": "P-12 - SEMIANATOMICO 3MM ACETINADO", "p": 49.9, "cp": 54.9, "pedras": 1, "q_pedra": 2},
+          {"m": "P-13", "d": "P-13 - SEMIANATOMICO 4MM LISO (POLIDO)", "p": 59.9, "cp": 59.9, "pedras": 0, "q_pedra": 0},
+          {"m": "P-14", "d": "P-14 - SEMIANATOMICO 4MM MEIA CANA FRIZO TORTO JATEADO", "p": 59.9, "cp": 59.9, "pedras": 0, "q_pedra": 0},
+          {"m": "P-15", "d": "P-15 - SEMIANATOMICO 4MM RETA FRIZO JATEADO", "p": 59.9, "cp": 59.9, "pedras": 0, "q_pedra": 0},
+          {"m": "P-16", "d": "P-16 - SEMIANATOMICO 5MM MEIA CANA JATEADO DOIS FRIZOS", "p": 69.9, "cp": 77.4, "pedras": 1, "q_pedra": 3},
+          {"m": "P-17", "d": "P-17 - SEMIANATOMICO 4MM JATEADO", "p": 59.9, "cp": 59.9, "pedras": 0, "q_pedra": 0},
+          {"m": "P-18", "d": "P-18 - SEMIANATOMICO 4MM TRADICIONAL MEIA CANA POLIDA", "p": 59.9, "cp": 59.9, "pedras": 0, "q_pedra": 0},
+          {"m": "P-19", "d": "P-19 - SEMIANATOMICO 2MM JATEADO", "p": 39.9, "cp": 42.4, "pedras": 1, "q_pedra": 1},
+          {"m": "P-20", "d": "P-20 - SEMIANATOMICO 3MM LISO (POLIDO)/JATEADO", "p": 49.9, "cp": 52.4, "pedras": 1, "q_pedra": 1},
+          {"m": "P-21", "d": "P-21 - SEMIANATOMICO 2MM RETA POLIDA", "p": 39.9, "cp": 64.9, "pedras": 1, "q_pedra": 10},
+          {"m": "P-22", "d": "P-22 - SEMIANATOMICO 4MM RETA DOIS FRIZOS JATEADO", "p": 59.9, "cp": 59.9, "pedras": 0, "q_pedra": 0},
+          {"m": "P-23", "d": "P-23 - SEMIANATOMICO 4MM MEIA CANA ACETINADO FRIZO CENTRAL", "p": 59.9, "cp": 67.4, "pedras": 1, "q_pedra": 3},
+          {"m": "P-24", "d": "P-24 - SEMIANATOMICO 4MM LISO (POLIDO)/JATEADO NA CAVA", "p": 59.9, "cp": 62.4, "pedras": 1, "q_pedra": 1},
+          {"m": "P-25", "d": "P-25 - SEMIANATOMICO 4MM LISO/JATEADO/ABAULADA", "p": 59.9, "cp": 62.4, "pedras": 1, "q_pedra": 1},
+          {"m": "P-26", "d": "P-26 - SEMIANATOMICO 4MM ACETINADO", "p": 59.9, "cp": 62.4, "pedras": 1, "q_pedra": 1},
+          {"m": "P-27", "d": "P-27 - SEMIANATOMICO 3MM CHANFRADA LISA", "p": 49.9, "cp": 49.9, "pedras": 0, "q_pedra": 0},
+          {"m": "P-28", "d": "P-28 - SEMIANATOMICO 5MM ABALOADA POLIDA", "p": 69.9, "cp": 69.9, "pedras": 0, "q_pedra": 0},
+          {"m": "P-29", "d": "P-29 - SEMIANATOMICO 4MM LISO/JATEADO", "p": 59.9, "cp": 59.9, "pedras": 0, "q_pedra": 0},
+          {"m": "P-30", "d": "P-30 - SEMIANATOMICO 2MM ABALOADA/JATEADA", "p": 39.9, "cp": 39.9, "pedras": 0, "q_pedra": 0},
+          {"m": "P-32", "d": "P-32 - SEMIANATOMICO 5MM LISO/JATEADO NA CAVA", "p": 69.9, "cp": 69.9, "pedras": 0, "q_pedra": 0},
+          {"m": "P-33", "d": "P-33 - SEMIANATOMICO 2MM CHANFRADA JATEADO", "p": 39.9, "cp": 39.9, "pedras": 0, "q_pedra": 0},
+          {"m": "P-34", "d": "P-34 - SEMIANATOMICO 4MM ABALOADA/POLIDA/FRIZO JATEADO", "p": 59.9, "cp": 59.9, "pedras": 0, "q_pedra": 0},
+          {"m": "P-35", "d": "P-35 - SEMIANATOMICO 2MM RETA/JATEADA", "p": 39.9, "cp": 39.9, "pedras": 0, "q_pedra": 0},
+          {"m": "P-36", "d": "P-36 - SEMIANATOMICO 4MM RETA / JATEADA INFINITO", "p": 59.9, "cp": 59.9, "pedras": 0, "q_pedra": 0},
+          {"m": "P-37", "d": "P-37 - SEMIANATOMICO 4MM JATEADO", "p": 59.9, "cp": 59.9, "pedras": 0, "q_pedra": 0},
+          {"m": "P-38", "d": "P-38 - SEMIANATOMICO 2MM LISO/JATEADO NA CAVA/MEIA CANA", "p": 39.9, "cp": 47.4, "pedras": 1, "q_pedra": 3},
+          {"m": "P-39", "d": "P-39 - SEMIANATOMICO 5MM MEIA CANA/JATEADO", "p": 69.9, "cp": 69.9, "pedras": 0, "q_pedra": 0},
+          {"m": "P-40", "d": "P-40 - SEMIANATOMICO 3MM LISO/JATEADO NA CAVA", "p": 49.9, "cp": 52.4, "pedras": 1, "q_pedra": 1},
+          {"m": "P-41", "d": "P-41 - SEMIANATOMICO 6MM LISO/ACETINADO ROLO DE LIXA PQ", "p": 79.9, "cp": 87.4, "pedras": 1, "q_pedra": 3},
+          {"m": "P-42", "d": "P-42 - SEMIANATOMICO 2MM ABALOADA/POLIDA", "p": 39.9, "cp": 39.9, "pedras": 0, "q_pedra": 0},
+          {"m": "P-43", "d": "P-43 - SEMIANATOMICO 6MM LISO/ACETINADO", "p": 79.9, "cp": 117.4, "pedras": 1, "q_pedra": 15},
+          {"m": "P-44", "d": "P-44 - SEMIANATOMICO 6MM ACETINADO", "p": 79.9, "cp": 87.4, "pedras": 1, "q_pedra": 3},
+          {"m": "P-45", "d": "P-45 - SEMIANATOMICO 5MM ACETINADO/JATEADO NA CAVA", "p": 69.9, "cp": 69.9, "pedras": 0, "q_pedra": 0},
+          {"m": "P-46", "d": "P-46 - SEMIANATOMICO 5MM LISO (POLIDO)", "p": 69.9, "cp": 77.4, "pedras": 1, "q_pedra": 3},
+          {"m": "P-47", "d": "P-47 - SEMIANATOMICO 4MM JATEADO/LISO", "p": 59.9, "cp": 59.9, "pedras": 0, "q_pedra": 0},
+          {"m": "P-48", "d": "P-48 - SEMIANATOMICO 3MM JATEADO", "p": 49.9, "cp": 49.9, "pedras": 0, "q_pedra": 0},
+          {"m": "P-49", "d": "P-49 - SEMIANATOMICO 3MM CHANFRADA / POLIDA", "p": 49.9, "cp": 49.9, "pedras": 0, "q_pedra": 0},
+          {"m": "P-50", "d": "P-50 - SEMIANATOMICO 3MM RETA/POLIDA", "p": 49.9, "cp": 49.9, "pedras": 0, "q_pedra": 0},
+          {"m": "P-51", "d": "P-51 - SEMIANATOMICO 2MM ABALOADA POLIDA", "p": 39.9, "cp": 42.4, "pedras": 1, "q_pedra": 1},
+          {"m": "P-52", "d": "P-52 - SEMIANATOMICO 2,5MM ABAOLADA", "p": 39.9, "cp": 57.4, "pedras": 1, "q_pedra": 7},
+          {"m": "P-53", "d": "P-53 - SEMIANATOMICO 5MM LISO/JATEADO", "p": 69.9, "cp": 72.4, "pedras": 1, "q_pedra": 1},
+          {"m": "P-54", "d": "P-54 - SEMIANATOMICO 6MM LISO/JATEADO", "p": 79.9, "cp": 84.9, "pedras": 1, "q_pedra": 2},
+          {"m": "P-55", "d": "P-55 - SEMIANATOMICO 5MM LISO/ACETINADO/JATEADO NA CAVA", "p": 69.9, "cp": 74.9, "pedras": 1, "q_pedra": 2},
+          {"m": "P-56", "d": "P-56 - SEMIANATOMICO 6MM LISO (POLIDO)", "p": 79.9, "cp": 104.9, "pedras": 1, "q_pedra": 10},
+          {"m": "P-57", "d": "P-57 - SEMIANATOMICO 5MM LISO (POLIDO)/MEIA CANA", "p": 69.9, "cp": 69.9, "pedras": 0, "q_pedra": 0},
+          {"m": "P-58", "d": "P-58 - SEMIANATOMICO 5MM JATEADO", "p": 69.9, "cp": 69.9, "pedras": 0, "q_pedra": 0},
+          {"m": "P-59", "d": "P-59 - SEMIANATOMICO 5MM LISO/JATEADO/MEIA CANA", "p": 69.9, "cp": 69.9, "pedras": 0, "q_pedra": 0},
+          {"m": "P-60", "d": "P-60 - SEMIANATOMICO 4MM MEIA CANA/ACETINADO/DOIS FRIZOS", "p": 59.9, "cp": 62.4, "pedras": 1, "q_pedra": 1},
+          {"m": "P-61", "d": "P-61 - SEMIANATOMICO 4MM LISO/JATEADO NA CAVA", "p": 59.9, "cp": 62.4, "pedras": 1, "q_pedra": 1},
+          {"m": "P-65", "d": "P-65 - SEMIANATOMICO 6MM POLIDA/CAVA LATERAL JATEAD", "p": 79.9, "cp": 104.9, "pedras": 1, "q_pedra": 10},
+          {"m": "P-70", "d": "P-70 - SEMIANATOMICO 3MM LISA CHANFRADA", "p": 49.9, "cp": 49.9, "pedras": 0, "q_pedra": 0},
+          {"m": "P-71", "d": "P-71 - SEMIANATOMICO 6MM DIAMANTADA FRIZO TORTO", "p": 79.9, "cp": 79.9, "pedras": 0, "q_pedra": 0},
+          {"m": "P-72", "d": "P-72 - SEMIANATOMICO 6MM ABAOLADA DOIS FRIZOS", "p": 79.9, "cp": 79.9, "pedras": 0, "q_pedra": 0},
+          {"m": "P-73", "d": "P-73 - SEMIANATOMICO 7MM DIAMANTADA FRIZO CENTRO", "p": 89.9, "cp": 89.9, "pedras": 0, "q_pedra": 0},
+          {"m": "P-74", "d": "P-74 - SEMIANATOMICO 8MM ABAOLADA DETALHADA", "p": 99.9, "cp": 99.9, "pedras": 0, "q_pedra": 0}
+        ];
+
+        let cart = [];
+
+        function syncText(inputId, divId) {
+            document.getElementById(divId).innerText = document.getElementById(inputId).value;
+        }
+
+        function switchTab(t, btn) {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(t).classList.add('active');
+            btn.classList.add('active');
+            if(t === 'orcamento') renderCheckout();
+        }
+
+        function renderCatalogo(itens) {
+            const lista = document.getElementById('lista'); lista.innerHTML = '';
+            itens.forEach(i => {
+                const hasStone = i.pedras > 0;
+                // Só mostra botão "Com Pedra" se tiver pedras OU se o preço for diferente
+                const showStoneBtn = hasStone || i.cp > i.p; 
+                
+                lista.innerHTML += `<div class="card">
+                    <div>
+                        <div class="modelo-header">
+                            <span class="modelo-id">${i.m}</span>
+                            ${hasStone ? `<span class="pedra-badge">💎 ${i.q_pedra}</span>` : ''}
+                        </div>
+                        <div class="modelo-desc">${i.d}</div>
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn btn-add" onclick="addToCart('${i.m}', false)">Sem Pedra R$${i.p.toFixed(2)}</button>
+                        ${showStoneBtn ? `<button class="btn btn-stone" onclick="addToCart('${i.m}', true)">Com Pedra R$${i.cp.toFixed(2)}</button>` : ''}
+                    </div>
+                </div>`;
+            });
+        }
+
+        function addToCart(m, stone) {
+            const p = produtos.find(x => x.m === m);
+            const id = m + (stone ? '-CP' : '-SP');
+            if(cart.find(c => c.id === id)) return;
+            cart.push({...p, id, hasStone: stone, price: stone ? p.cp : p.p, sizes: {}});
+            document.getElementById('cart-counter').innerText = cart.length;
+        }
+
+        function renderCheckout() {
+            const container = document.getElementById('itens-checkout'); container.innerHTML = '';
+            let total = 0;
+            
+            cart.forEach((item, idx) => {
+                const q = Object.values(item.sizes).reduce((a, b) => a + (parseInt(b) || 0), 0);
+                const sub = item.price * q; total += sub;
+                
+                let grid = ''; 
+                for(let s=10; s<=33; s++) {
+                    grid += `<div class="tamanho-box"><span>${s}</span><input type="number" value="${item.sizes[s] || ''}" oninput="updateSize(${idx}, ${s}, this.value)"></div>`;
+                }
+
+                container.innerHTML += `<div class="orcamento-item" id="row-${idx}">
+                    <div class="orcamento-header">
+                        <div class="item-info">
+                            ${item.m} ${item.hasStone?'(C/P)':'(S/P)'} 
+                            ${item.hasStone ? `<span style="font-size:12px; color:#D4AF37; margin-left:5px;">(💎 ${item.q_pedra})</span>` : ''}
+                            <br> <small style="color:#aaa; font-weight:normal;">Unit: R$ ${item.price.toFixed(2)}</small>
+                        </div>
+                        <div class="item-subtotal">R$ ${sub.toFixed(2)}</div>
+                    </div>
+                    <div class="tamanho-grid">${grid}</div>
+                    <div style="text-align:right; margin-top:10px;">
+                        <span class="remover-btn" onclick="remove(${idx})" style="color:#ef4444; font-size:11px; cursor:pointer; font-weight:700; text-transform:uppercase; letter-spacing:0.5px;">✕ Remover</span>
+                    </div>
+                </div>`;
+            });
+
+            document.getElementById('total-geral').innerText = total.toFixed(2).replace('.',',');
+        }
+
+        function updateSize(idx, s, v) { 
+            cart[idx].sizes[s] = v; 
+            const item = cart[idx];
+            const q = Object.values(item.sizes).reduce((a, b) => a + (parseInt(b) || 0), 0);
+            const sub = item.price * q;
+            
+            const row = document.getElementById(`row-${idx}`);
+            if(row) row.querySelector('.item-subtotal').innerText = `R$ ${sub.toFixed(2)}`;
+
+            let total = 0;
+            cart.forEach(i => {
+                const qTotal = Object.values(i.sizes).reduce((a, b) => a + (parseInt(b) || 0), 0);
+                total += i.price * qTotal;
+            });
+            document.getElementById('total-geral').innerText = total.toFixed(2).replace('.',',');
+        }
+
+        function remove(idx) { 
+            cart.splice(idx,1); 
+            document.getElementById('cart-counter').innerText = cart.length; 
+            renderCheckout(); 
+        }
+
+        async function enviarPedido() {
+            const v = document.getElementById('vendedor').value;
+            const c = document.getElementById('cliente').value;
+            if(!v || !c) return alert("⚠️ Preencha Vendedor e Cliente!");
+
+            const btn = document.getElementById('btn-finalizar'); 
+            btn.disabled = true; 
+            btn.innerText = "⏳ ENVIANDO...";
+
+            const payload = [];
+            cart.forEach(item => {
+                Object.entries(item.sizes).forEach(([tam, q]) => {
+                    if(q > 0) payload.push({
+                        data: new Date().toLocaleString('pt-BR'), 
+                        vendedor: v, 
+                        cliente: c, 
+                        modelo: item.m, 
+                        tipo: item.hasStone ? `C/ Pedra (${item.q_pedra} un)` : "S/ Pedra", 
+                        tamanho: tam, 
+                        qtd: q, 
+                        subtotal: (item.price * q).toFixed(2)
+                    });
+                });
+            });
+
+            if(payload.length === 0) { alert("Pedido vazio!"); btn.disabled = false; return; }
+
+            try {
+                // SEU LINK DO GOOGLE SCRIPT (MANTIDO O MESMO QUE VOCÊ PASSOU)
+                const url = "https://script.google.com/macros/s/AKfycbwJwSZvTWdTiNM_OXbB4fGRMrAoVDhj165sMfC0H8VtpR1cYpg6bdxRegwFKTz0xNNu4A/exec";
+                
+                await fetch(url, {
+                    method: 'POST', 
+                    mode: 'no-cors', 
+                    body: JSON.stringify(payload)
+                });
+
+                alert("✅ Pedido salvo! Gerando PDF...");
+                document.getElementById('data-atual').innerText = new Date().toLocaleString('pt-BR');
+                window.print();
+            } catch(e) { 
+                alert("Erro ao enviar. Imprimindo PDF local..."); 
+                window.print();
+            }
+            btn.disabled = false; btn.innerText = "Concluir Pedido";
+        }
+
+        function filtrar() {
+            const b = document.getElementById('busca').value.toUpperCase();
+            renderCatalogo(produtos.filter(p => p.m.includes(b) || p.d.toUpperCase().includes(b)));
+        }
+        
+        // Inicialização
+        document.getElementById('data-atual').innerText = new Date().toLocaleString('pt-BR');
+        renderCatalogo(produtos);
+    </script>
+</body>
+</html>
