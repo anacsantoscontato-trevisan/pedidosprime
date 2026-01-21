@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Sistema Prime - V22 Atualizado</title>
+    <title>Sistema Prime - V24 Rápido</title>
     <style>
         :root {
             --ouro: #D4AF37; 
@@ -23,7 +23,7 @@
             background-image: radial-gradient(circle at top, #1c1c20 0%, #09090b 100%);
             color: var(--texto); 
             -webkit-font-smoothing: antialiased; 
-            padding-bottom: 80px; 
+            padding-bottom: 140px; /* Espaço extra para a barra fixa não cobrir conteúdo */
             min-height: 100vh;
         }
 
@@ -47,13 +47,13 @@
             z-index: 1000; 
             gap: 5px; 
             box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-            max-width: 400px; 
+            max-width: 300px; /* Reduzido pois removemos um botão */
             margin: 0 auto 40px auto;
         }
         
         .tab-btn { 
             flex: 1; 
-            padding: 10px 20px; 
+            padding: 10px 15px; 
             border: none; 
             background: transparent; 
             color: var(--texto-secundario); 
@@ -71,6 +71,67 @@
         .view { display: none; animation: fadeIn 0.4s ease; }
         .view.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* --- CALCULADORA FIXA (NOVA) --- */
+        .quick-calc-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(24, 24, 27, 0.95);
+            border-top: 1px solid var(--ouro);
+            backdrop-filter: blur(10px);
+            padding: 15px 0;
+            z-index: 2000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 -5px 30px rgba(0,0,0,0.7);
+        }
+
+        .calc-content {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            max-width: var(--container-width);
+            padding: 0 20px;
+        }
+
+        .calc-input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .calc-input {
+            background: rgba(0,0,0,0.4);
+            border: 1px solid var(--borda-sutil);
+            color: #fff;
+            padding: 10px 15px;
+            border-radius: 8px;
+            width: 80px;
+            font-size: 18px;
+            font-weight: 700;
+            text-align: center;
+            outline: none;
+        }
+        .calc-input:focus { border-color: var(--ouro); }
+        
+        .calc-label {
+            color: var(--texto-secundario);
+            font-size: 11px;
+            text-transform: uppercase;
+            font-weight: 700;
+            margin-right: 10px;
+        }
+
+        .calc-result-box {
+            display: flex;
+            flex-direction: column;
+        }
+        .calc-res-label { font-size: 9px; color: var(--texto-secundario); text-transform: uppercase; }
+        .calc-res-value { color: var(--ouro); font-size: 20px; font-weight: 800; }
+
 
         /* --- CATÁLOGO --- */
         .search-container {
@@ -257,7 +318,7 @@
             @page { size: A4; margin: 1cm; }
             body { background: white !important; color: black !important; padding: 0 !important; margin: 0 !important; overflow: visible !important; }
             .container { max-width: 100% !important; margin: 0 !important; padding: 0 !important; }
-            .tabs, .btn, #busca, .remover-btn, #btn-finalizar, input { display: none !important; }
+            .tabs, .btn, #busca, .remover-btn, #btn-finalizar, input, .quick-calc-bar { display: none !important; }
             .view { display: block !important; padding: 0 !important; }
             #catalogo { display: none !important; }
             #orcamento { display: block !important; width: 100% !important; margin: 0 auto !important; }
@@ -326,8 +387,21 @@
         </div>
     </div>
 
+    <div class="quick-calc-bar">
+        <div class="calc-content">
+            <div class="calc-label">CALCULADORA<br>RÁPIDA</div>
+            <div class="calc-input-wrapper">
+                <input type="number" id="quick-mm" class="calc-input" placeholder="mm" oninput="calcularRapido(this.value)">
+            </div>
+            <div class="calc-result-box">
+                <span class="calc-res-label">PREÇO BASE</span>
+                <span class="calc-res-value" id="quick-result">R$ 0,00</span>
+            </div>
+        </div>
+    </div>
+
     <script>
-        // DADOS 100% SINCRONIZADOS COM O JSON
+        // DADOS
         const produtos = [
           {"m": "D-01", "d": "D-01 - SEMIANATOMICO 3MM CHANFRADA DIAMANTEIRA", "p": 49.9, "cp": 49.9, "pedras": 0, "q_pedra": 0},
           {"m": "D-02", "d": "D-02 - SEMIANATOMICO 3MM LISA /1FRIZO DIAMANTADEIRA", "p": 49.9, "cp": 49.9, "pedras": 0, "q_pedra": 0},
@@ -418,11 +492,22 @@
             if(t === 'orcamento') renderCheckout();
         }
 
+        // --- CALCULADORA RÁPIDA (FIXA) ---
+        function calcularRapido(mm) {
+            const display = document.getElementById('quick-result');
+            if(!mm || mm <= 0) {
+                display.innerText = "R$ 0,00";
+                return;
+            }
+            // Lógica baseada no catálogo: (mm * 10) + 19.90
+            let precoBase = (mm * 10) + 19.90;
+            display.innerText = "R$ " + precoBase.toFixed(2).replace('.',',');
+        }
+
         function renderCatalogo(itens) {
             const lista = document.getElementById('lista'); lista.innerHTML = '';
             itens.forEach(i => {
                 const hasStone = i.pedras > 0;
-                // Só mostra botão "Com Pedra" se tiver pedras OU se o preço for diferente
                 const showStoneBtn = hasStone || i.cp > i.p; 
                 
                 lista.innerHTML += `<div class="card">
@@ -447,6 +532,7 @@
             if(cart.find(c => c.id === id)) return;
             cart.push({...p, id, hasStone: stone, price: stone ? p.cp : p.p, sizes: {}});
             document.getElementById('cart-counter').innerText = cart.length;
+            alert(`✅ ${m} adicionado!`);
         }
 
         function renderCheckout() {
@@ -532,7 +618,7 @@
             if(payload.length === 0) { alert("Pedido vazio!"); btn.disabled = false; return; }
 
             try {
-                // SEU LINK DO GOOGLE SCRIPT (MANTIDO O MESMO QUE VOCÊ PASSOU)
+                // SEU LINK DO GOOGLE SCRIPT
                 const url = "https://script.google.com/macros/s/AKfycbwJwSZvTWdTiNM_OXbB4fGRMrAoVDhj165sMfC0H8VtpR1cYpg6bdxRegwFKTz0xNNu4A/exec";
                 
                 await fetch(url, {
